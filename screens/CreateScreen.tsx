@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, SafeAreaView, TextInput, TouchableOpacity, Switch } from 'react-native'
 import React, { useState } from 'react'
 import { useNavigation } from '@react-navigation/core';
+import { createNewBucketItem } from '../services/DbService';
 
 const CreateScreen = () => {
     const navigation:any = useNavigation();
@@ -9,6 +10,22 @@ const CreateScreen = () => {
     const [priority, setPriority] = useState(false)
     const [due, setDue] = useState('')
     const [description, setDescription] = useState('')
+
+
+    const handleCreation = async () => {
+        // pass all data to the function
+        // TODO: make sure all fields are filled out & disable button if not
+        var items = { title, priority, due, description, isCompleted: false}
+        const success = await createNewBucketItem(items);
+        if(success) {
+            navigation.goBack(); // if successful, go back home
+            // OPTIONAL: Send the data back to the list screen -> found in documentation for react navigation (passing params to previous screen)
+        }
+        else {
+            // TODO: validation on why it failed
+            console.error("Failed to create bucket item");
+        }
+    }
 
   return (
     <SafeAreaView >
@@ -48,7 +65,7 @@ const CreateScreen = () => {
                 <Text>Priority?</Text>
             </View>
 
-            <TouchableOpacity style={styles.button} >
+            <TouchableOpacity style={styles.button} onPress={handleCreation}>
                 <Text style={styles.buttonText}>Create Bucket List Item</Text>
             </TouchableOpacity>
         

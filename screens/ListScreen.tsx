@@ -1,8 +1,9 @@
 import { Pressable, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { AntDesign } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { getMyBucketList } from '../services/DbService';
 
 const ListScreen = () => {
 
@@ -10,7 +11,33 @@ const ListScreen = () => {
 
   const goToAdd = () => { navigation.navigate("Add") }
 
+  const [bucketItems, setBucketItems] = useState<any[]>([]);
+
+//   useEffect(() => { //only running on first load, when navigation back it doesnt re-render
+//     handleGettingData();
+//   },[]);
+
+useFocusEffect(
+    React.useCallback(() => {
+      // Do something when the screen is focused
+      handleGettingData();
+
+      return () => {
+        // Do something when the screen is unfocused
+        // Useful for cleanup functions
+        // DO NOTHING
+      };
+    }, [])
+  );
+
+  const handleGettingData = async () => {
+    var allData = await getMyBucketList();
+    console.log("All Data: ", allData);
+    setBucketItems(allData);
+  }
+
   return (
+    // OPTIONAL - drag to reload our data option
     <SafeAreaView>
         <View  style={styles.container}>
 
@@ -20,11 +47,26 @@ const ListScreen = () => {
             </Pressable>
 
 
-            {/* THIS WILL LOOP FOR EACH ITEM */}
-            <TouchableOpacity style={styles.card} onPress={() => navigation.navigate("Details")}>
-                <Text>Title</Text>
-                <AntDesign name="star" size={24} color="orange" />
-            </TouchableOpacity>
+            {/* THIS WILL LOOP FOR EACH ITEM  - scrollview or flat list & why used which*/}
+            {
+            bucketItems.length !== 0 ? (
+                bucketItems.map((item, index) => (
+                <TouchableOpacity
+                    key={index}
+                    style={styles.card}
+                    onPress={() => navigation.navigate("Details")}
+                >
+                    <Text>{item.title}</Text>
+                    {item.priority ? (
+                    <AntDesign name="star" size={24} color="orange" />
+                    ) : null}
+                    {/* show the star icon if priority */}
+                </TouchableOpacity>
+                ))
+            ) : (
+                <Text>No items found</Text>
+            )
+            }
             {/* END LOOP */}
         </View>
        
@@ -45,7 +87,8 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        marginBottom: 10,
     },
     addButton: {
         backgroundColor: 'white',
